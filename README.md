@@ -1,16 +1,19 @@
 # PyStock_Manager
-Lenguaje de Programación III Propuesta del Proyecto Final Desarrollo de una aplicación en Python aplicando fundamentos de programación,POO, base de datos, ORM, GitHub y un framework o librería complementaria
-
 
 Sistema de Gestión de Inventario 📦
 Un sistema robusto y modular desarrollado en **Python** diseñado para optimizar el control de existencias, facturación, reportes y la gestión integral de clientes y proveedores. El proyecto sigue una arquitectura limpia y organizada por componentes para garantizar su escalabilidad y fácil mantenimiento.
 
 
  🚀 Características Principales
+
 •	Gestión de Inventario: Control total de existencias, entradas y salidas de mercancía.
+
 •	Módulo de Facturación: Creación, detalle y seguimiento de facturas emitidas de manera estructurada.
+
 •	Gestión de Terceros: Directorio y administración optimizada de Clientes (Customers) y Proveedores (Suppliers).
+
 •	Reportes Estadísticos: Generación de vistas e informes analíticos del estado actual del inventario y las ventas.
+
 •	Estructura Modular: Código desacoplado basado en vistas independientes para cada entidad del sistema.
 
 
