@@ -90,3 +90,4 @@ Estudiante de Ingeniería de Sistemas
 1. Archivo `main.py`: Si tu script ejecutable principal está fuera de la carpeta `inventario` o tiene otro nombre (por ejemplo, `run.py`), solo cámbialo en la sección de **Ejecución**.
 2. Dependencias: Si usas librerías externas (como `Flask`, `Tkinter` avanzado, etc.), puedes añadir una sección intermedia que diga `pip install -r requirements.txt` para que se vea aún más profesional.
 
+
