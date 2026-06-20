@@ -1,4 +1,4 @@
-# PyStock_Manager
+PyStock_Manager
 
 Sistema de Gestión de Inventario 📦
 Un sistema robusto y modular desarrollado en **Python** diseñado para optimizar el control de existencias, facturación, reportes y la gestión integral de clientes y proveedores. El proyecto sigue una arquitectura limpia y organizada por componentes para garantizar su escalabilidad y fácil mantenimiento.
