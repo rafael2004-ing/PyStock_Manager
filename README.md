@@ -27,17 +27,18 @@ Un sistema robusto y modular desarrollado en **Python** diseñado para optimizar
 La raíz del proyecto se organiza de la siguiente manera (las carpetas de caché `__pycache__` se omiten en producción):
 
 ```text
-Inventario/
-│
-├── config.py                 # Configuración global y parámetros del sistema
-│
-└── views/                    # Vistas y componentes de la interfaz/lógica de presentación
-    ├── customer_supplier_view.py   # Gestión de Clientes y Proveedores
-    ├── invoice_detail_view.py      # Control y desglose de detalles de facturas
-    ├── invoice_view.py             # Gestión general de facturación
-    ├── order_view.py               # Procesamiento y visualización de órdenes
-    ├── product_view.py             # Control, registro y edición de productos
-    └── report_view.py              # Generación de reportes y estadísticas
+
+
+PyStock_Manager/
+├── src/                  # Código fuente de la aplicación
+│   ├── database/         # Conexiones y scripts de la Base de Datos
+│   ├── views/            # Interfaces de usuario (Ventanas, componentes)
+│   ├── controllers/      # Lógica de negocio y controladores
+│   └── models/           # Modelos de datos (Producto, Proveedor, etc.)
+├── assets/               # Imágenes, iconos y recursos visuales
+├── main.py               # Punto de entrada de la aplicación
+├── requirements.txt      # Dependencias del proyecto
+└── README.md             # Documentación del sistema
 
 
 
