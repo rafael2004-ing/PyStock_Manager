@@ -52,7 +52,7 @@ Python –version
 2. Clonar o Descomprimir el Proyecto
 Extrae el contenido del archivo comprimido o clona el repositorio en tu directorio de trabajo. Luego, navega hacia la carpeta raíz:
 ```bash
-Cd inventario
+Cd PyStock_Manager
 
 3. Configuración del Entorno (Opcional pero recomendado)
 Es buena práctica utilizar un entorno virtual para aislar las dependencias:
