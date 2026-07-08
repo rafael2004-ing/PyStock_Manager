@@ -9,7 +9,7 @@ class Database:
         """Creates and returns a connection to SQLite with foreign keys enabled."""
         conn = sqlite3.connect(config.DB_PATH)
         conn.execute("PRAGMA foreign_keys = ON;")
-        conn.row_factory = sqlite3.Row  
+        conn.row_factory = sqlite3.Row  # Access columns as dictionaries/attributes
         return conn
 
     @classmethod

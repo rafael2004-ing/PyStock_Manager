@@ -1,4 +1,11 @@
 import sys
+import os
+
+# Asegurar que el directorio raíz del proyecto esté en el path de búsqueda de Python
+project_root = os.path.dirname(os.path.abspath(__file__))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
 from models.database import Database
 from models.user import User
 from views.main_window import MainWindow
