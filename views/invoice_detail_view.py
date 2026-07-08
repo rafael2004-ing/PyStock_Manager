@@ -1,5 +1,7 @@
 import customtkinter as ctk
+from tkinter import filedialog, messagebox
 from config import COLORS
+from utils.pdf_generator import generate_invoice_pdf
 
 class InvoiceDetailWindow(ctk.CTkToplevel):
     def __init__(self, parent, order, invoice, **kwargs):
@@ -197,9 +199,25 @@ class InvoiceDetailWindow(ctk.CTkToplevel):
         # Grand Total
         self.add_total_line(totals_frame, "TOTAL FACTURA", f"${self.invoice.total:,.2f}", is_bold=True, is_accent=True)
 
-        # Close Button
+        # Action Buttons (Export PDF & Close)
+        actions_frame = ctk.CTkFrame(container, fg_color="transparent")
+        actions_frame.pack(fill="x", padx=20, pady=(10, 20))
+        actions_frame.grid_columnconfigure((0, 1), weight=1)
+
+        btn_pdf = ctk.CTkButton(
+            actions_frame,
+            text="Exportar PDF 📄",
+            font=("Segoe UI", 13, "bold"),
+            fg_color=COLORS["accent"],
+            text_color=COLORS["bg_dark"],
+            hover_color=COLORS["accent_hover"],
+            height=40,
+            command=self.export_to_pdf
+        )
+        btn_pdf.grid(row=0, column=0, padx=(0, 5), sticky="ew")
+
         btn_close = ctk.CTkButton(
-            container,
+            actions_frame,
             text="Aceptar  ✓",
             font=("Segoe UI", 13, "bold"),
             fg_color=COLORS["success"],
@@ -208,7 +226,34 @@ class InvoiceDetailWindow(ctk.CTkToplevel):
             height=40,
             command=self.destroy
         )
-        btn_close.pack(fill="x", padx=20, pady=(10, 20))
+        btn_close.grid(row=0, column=1, padx=(5, 0), sticky="ew")
+
+    def export_to_pdf(self):
+        try:
+            # Let the user select the save location
+            file_path = filedialog.asksaveasfilename(
+                parent=self,
+                defaultextension=".pdf",
+                filetypes=[("Archivos PDF", "*.pdf")],
+                initialfile=f"factura_{self.invoice.invoice_number}.pdf",
+                title="Guardar Factura como PDF"
+            )
+            
+            if not file_path:
+                return # User cancelled
+                
+            generate_invoice_pdf(file_path, self.order, self.invoice)
+            messagebox.showinfo(
+                parent=self,
+                title="Exportación Exitosa",
+                message=f"La factura se ha guardado correctamente como PDF en:\n{file_path}"
+            )
+        except Exception as e:
+            messagebox.showerror(
+                parent=self,
+                title="Error de Exportación",
+                message=f"No se pudo generar el archivo PDF:\n{str(e)}"
+            )
 
     def create_divider(self, parent):
         divider = ctk.CTkFrame(

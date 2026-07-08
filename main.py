@@ -6,6 +6,13 @@ project_root = os.path.dirname(os.path.abspath(__file__))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
+# Imprimir diagnóstico temporal para ayudar a solucionar el problema en la otra PC
+print("=== DIAGNÓSTICO DE INICIO ===")
+print("Directorio de main.py:", project_root)
+print("Archivos/carpetas en ese directorio:", os.listdir(project_root) if os.path.exists(project_root) else "Ruta no encontrada")
+print("sys.path actual:", sys.path)
+print("=============================")
+
 from models.database import Database
 from models.user import User
 from views.main_window import MainWindow
