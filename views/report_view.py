@@ -7,6 +7,7 @@ from views.components.stats_card import StatsCard
 from views.invoice_detail_view import InvoiceDetailWindow
 from models.order import Order
 from models.invoice import Invoice
+from utils.pdf_generator import generate_sales_report_pdf
 
 
 class ReportView(ctk.CTkFrame):
@@ -145,11 +146,27 @@ class ReportView(ctk.CTkFrame):
         )
         filters_frame.grid(row=0, column=0, sticky="ew", pady=(0, 15))
         filters_frame.grid_propagate(False)
+        filters_frame.grid_columnconfigure(6, weight=1) # Push export button to right
 
-        # Date pickers labels & entries
-        # Start Date
-        lbl_start = ctk.CTkLabel(filters_frame, text="FECHA INICIO (AAAA-MM-DD):", font=("Segoe UI", 10, "bold"), text_color=COLORS["text_secondary"])
-        lbl_start.grid(row=0, column=0, padx=(20, 5), pady=18, sticky="w")
+        # Period Selector
+        lbl_range = ctk.CTkLabel(filters_frame, text="PERÍODO:", font=("Segoe UI", 10, "bold"), text_color=COLORS["text_secondary"])
+        lbl_range.grid(row=0, column=0, padx=(15, 5), pady=18, sticky="w")
+
+        self.range_selector = ctk.CTkSegmentedButton(
+            filters_frame,
+            values=["Semanal", "Mensual", "Personalizado"],
+            font=("Segoe UI", 10, "bold"),
+            selected_color=COLORS["accent"],
+            selected_hover_color=COLORS["accent_hover"],
+            fg_color=COLORS["bg_dark"],
+            text_color=COLORS["text_primary"],
+            command=self.on_range_changed
+        )
+        self.range_selector.grid(row=0, column=1, padx=(0, 15), pady=18, sticky="w")
+
+        # Date Pickers
+        self.lbl_start = ctk.CTkLabel(filters_frame, text="INICIO:", font=("Segoe UI", 10, "bold"), text_color=COLORS["text_secondary"])
+        self.lbl_start.grid(row=0, column=2, padx=(10, 5), pady=18, sticky="w")
         
         self.start_date_entry = ctk.CTkEntry(
             filters_frame,
@@ -159,15 +176,13 @@ class ReportView(ctk.CTkFrame):
             border_color=COLORS["border"],
             text_color=COLORS["text_primary"]
         )
-        self.start_date_entry.grid(row=0, column=1, padx=5, pady=18, sticky="w")
-        
-        # Default start date: 30 days ago
-        default_start = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
-        self.start_date_entry.insert(0, default_start)
+        self.start_date_entry.grid(row=0, column=3, padx=5, pady=18, sticky="w")
+        self.start_date_entry.bind("<KeyRelease>", self.on_date_key_release)
+        self.start_date_entry.bind("<Return>", lambda e: self.generate_sales_report())
+        self.start_date_entry.bind("<FocusOut>", lambda e: self.generate_sales_report())
 
-        # End Date
-        lbl_end = ctk.CTkLabel(filters_frame, text="FECHA FIN (AAAA-MM-DD):", font=("Segoe UI", 10, "bold"), text_color=COLORS["text_secondary"])
-        lbl_end.grid(row=0, column=2, padx=(20, 5), pady=18, sticky="w")
+        self.lbl_end = ctk.CTkLabel(filters_frame, text="FIN:", font=("Segoe UI", 10, "bold"), text_color=COLORS["text_secondary"])
+        self.lbl_end.grid(row=0, column=4, padx=(15, 5), pady=18, sticky="w")
         
         self.end_date_entry = ctk.CTkEntry(
             filters_frame,
@@ -177,37 +192,33 @@ class ReportView(ctk.CTkFrame):
             border_color=COLORS["border"],
             text_color=COLORS["text_primary"]
         )
-        self.end_date_entry.grid(row=0, column=3, padx=5, pady=18, sticky="w")
-        
-        # Default end date: today
-        default_end = datetime.now().strftime("%Y-%m-%d")
-        self.end_date_entry.insert(0, default_end)
+        self.end_date_entry.grid(row=0, column=5, padx=5, pady=18, sticky="w")
+        self.end_date_entry.bind("<KeyRelease>", self.on_date_key_release)
+        self.end_date_entry.bind("<Return>", lambda e: self.generate_sales_report())
+        self.end_date_entry.bind("<FocusOut>", lambda e: self.generate_sales_report())
 
-        # Filter Button
-        btn_filter = ctk.CTkButton(
+        # Set default values to Monthly and disabled fields
+        default_start = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
+        default_end = datetime.now().strftime("%Y-%m-%d")
+        self.start_date_entry.insert(0, default_start)
+        self.end_date_entry.insert(0, default_end)
+        
+        self.range_selector.set("Mensual")
+        self.start_date_entry.configure(state="readonly")
+        self.end_date_entry.configure(state="readonly")
+
+        # Export Button (Only button)
+        self.btn_export = ctk.CTkButton(
             filters_frame,
-            text="Generar  📊",
+            text="Exportar PDF  📄",
             font=("Segoe UI", 11, "bold"),
-            width=100,
+            width=130,
             fg_color=COLORS["accent"],
             text_color=COLORS["bg_dark"],
             hover_color=COLORS["accent_hover"],
-            command=self.generate_sales_report
+            command=self.export_sales_report_pdf
         )
-        btn_filter.grid(row=0, column=4, padx=(15, 5), pady=18, sticky="e")
-
-        # Export Button
-        btn_export = ctk.CTkButton(
-            filters_frame,
-            text="Exportar  📥",
-            font=("Segoe UI", 11, "bold"),
-            width=100,
-            fg_color=COLORS["success"],
-            text_color=COLORS["bg_dark"],
-            hover_color="#8ed189",
-            command=self.export_sales_report
-        )
-        btn_export.grid(row=0, column=5, padx=(5, 20), pady=18, sticky="e")
+        self.btn_export.grid(row=0, column=6, padx=(15, 20), pady=18, sticky="e")
 
         # 2. Stats cards row (Mini Dashboard inside)
         self.stats_row_frame = ctk.CTkFrame(self.tab_sales, fg_color="transparent")
@@ -271,9 +282,55 @@ class ReportView(ctk.CTkFrame):
         except Exception as e:
             messagebox.showerror("Error", f"No se pudo generar el reporte: {str(e)}")
 
-    def export_sales_report(self):
-        """Exports the currently displayed sales report to a CSV file."""
-        import csv
+    def on_range_changed(self, value):
+        # Enable entries temporarily to edit them programmatically
+        self.start_date_entry.configure(state="normal")
+        self.end_date_entry.configure(state="normal")
+        
+        today = datetime.now()
+        if value == "Semanal":
+            start_date = (today - timedelta(days=7)).strftime("%Y-%m-%d")
+            end_date = today.strftime("%Y-%m-%d")
+            
+            self.start_date_entry.delete(0, "end")
+            self.start_date_entry.insert(0, start_date)
+            self.end_date_entry.delete(0, "end")
+            self.end_date_entry.insert(0, end_date)
+            
+            self.start_date_entry.configure(state="readonly")
+            self.end_date_entry.configure(state="readonly")
+            
+        elif value == "Mensual":
+            start_date = (today - timedelta(days=30)).strftime("%Y-%m-%d")
+            end_date = today.strftime("%Y-%m-%d")
+            
+            self.start_date_entry.delete(0, "end")
+            self.start_date_entry.insert(0, start_date)
+            self.end_date_entry.delete(0, "end")
+            self.end_date_entry.insert(0, end_date)
+            
+            self.start_date_entry.configure(state="readonly")
+            self.end_date_entry.configure(state="readonly")
+            
+        else: # Personalizado
+            # Keep enabled for user input
+            pass
+            
+        self.generate_sales_report()
+
+    def on_date_key_release(self, event):
+        start = self.start_date_entry.get().strip()
+        end = self.end_date_entry.get().strip()
+        if len(start) == 10 and len(end) == 10:
+            try:
+                datetime.strptime(start, "%Y-%m-%d")
+                datetime.strptime(end, "%Y-%m-%d")
+                self.generate_sales_report()
+            except ValueError:
+                pass # Silently ignore during editing
+
+    def export_sales_report_pdf(self):
+        """Exports the currently displayed sales report to a PDF file."""
         from tkinter import filedialog
         
         start_date = self.start_date_entry.get().strip()
@@ -286,41 +343,27 @@ class ReportView(ctk.CTkFrame):
                 return
                 
             file_path = filedialog.asksaveasfilename(
-                defaultextension=".csv",
-                filetypes=[("Archivos CSV", "*.csv")],
-                initialfile=f"reporte_ventas_{start_date}_a_{end_date}.csv",
-                title="Guardar Reporte de Ventas"
+                parent=self,
+                defaultextension=".pdf",
+                filetypes=[("Archivos PDF", "*.pdf")],
+                initialfile=f"reporte_ventas_{start_date}_a_{end_date}.pdf",
+                title="Guardar Reporte de Ventas como PDF"
             )
             if not file_path:
                 return
                 
-            with open(file_path, "w", newline="", encoding="utf-8-sig") as f:
-                writer = csv.writer(f)
-                # Write metadata
-                writer.writerow(["REPORTE DE VENTAS"])
-                writer.writerow([f"Período: {start_date} al {end_date}"])
-                writer.writerow([])
-                writer.writerow(["Resumen General"])
-                writer.writerow(["Facturas Emitidas", report["order_count"]])
-                writer.writerow(["Ingreso Total", report["total_revenue"]])
-                writer.writerow(["Ticket Promedio", report["average_order"]])
-                writer.writerow([])
-                # Write headers
-                writer.writerow(["Factura ID", "Fecha Emisión", "Cliente", "Subtotal ($)", "Impuesto ($)", "Total ($)"])
-                # Write items
-                for o in report["orders"]:
-                    writer.writerow([
-                        f"FAC-{o.id:04d}",
-                        o.order_date[:19],
-                        f"{o.customer_name} ({o.customer_rif})",
-                        f"{o.subtotal:.2f}",
-                        f"{o.tax:.2f}",
-                        f"{o.total:.2f}"
-                    ])
-                    
-            messagebox.showinfo("Éxito", f"Reporte exportado correctamente a:\n{file_path}")
+            # Compile dashboard stat values from the StatsCard components
+            report_data = {
+                "total_revenue": self.report_card_total.value_label.cget("text"),
+                "order_count": self.report_card_qty.value_label.cget("text"),
+                "average_order": self.report_card_avg.value_label.cget("text"),
+                "orders": report["orders"]
+            }
+            
+            generate_sales_report_pdf(file_path, start_date, end_date, report_data)
+            messagebox.showinfo("Éxito", f"Reporte exportado correctamente a PDF en:\n{file_path}")
         except Exception as e:
-            messagebox.showerror("Error", f"No se pudo exportar el reporte: {str(e)}")
+            messagebox.showerror("Error", f"No se pudo exportar el reporte a PDF: {str(e)}")
 
     def export_critical_stock(self):
         """Exports the current critical stock list to a CSV file."""
